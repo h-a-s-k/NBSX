@@ -95,11 +95,11 @@ const Conversation = {
 let prevMessages;
 let mdlCache;
 
-ServerResponse.prototype.json = async function(e, t = 200, o) {
+ServerResponse.prototype.json = async function(e, t = 200, s) {
     e = e instanceof Promise ? await e : e;
     this.headersSent || this.writeHead(t, {
         'Content-Type': 'application/json',
-        ...o && o
+        ...s && s
     });
     this.end('object' == typeof e ? JSON.stringify(e) : e);
     return this;
@@ -130,8 +130,8 @@ const fileName = () => {
     const e = randomInt(5, 15);
     let t = randomBytes(e).toString('hex');
     for (let e = 0; e < t.length; e++) {
-        const o = t.charAt(e);
-        isNaN(o) && randomInt(1, 5) % 2 == 0 && ' ' !== t.charAt(e - 1) && (t = t.slice(0, e) + ' ' + t.slice(e));
+        const s = t.charAt(e);
+        isNaN(s) && randomInt(1, 5) % 2 == 0 && ' ' !== t.charAt(e - 1) && (t = t.slice(0, e) + ' ' + t.slice(e));
     }
     return t + '.txt';
 };
@@ -152,8 +152,8 @@ const deleteChat = async e => {
             conversation_id: e
         })
     });
-    const o = await t.json();
-    if (!t?.body || !o?.success) {
+    const s = await t.json();
+    if (!t?.body || !s?.success) {
         return null;
     }
     updateCookies(t);
@@ -165,8 +165,8 @@ const bytesToSize = (e = 0) => {
     if (0 === e) {
         return '0 B';
     }
-    const o = Math.min(Math.floor(Math.log(e) / Math.log(1024)), 4);
-    return 0 === o ? `${e} ${t[o]}` : `${(e / 1024 ** o).toFixed(1)} ${t[o]}`;
+    const s = Math.min(Math.floor(Math.log(e) / Math.log(1024)), 4);
+    return 0 === s ? `${e} ${t[s]}` : `${(e / 1024 ** s).toFixed(1)} ${t[s]}`;
 };
 
 const genericFixes = e => e.replace(/(\r\n|\r|\\n)/gm, '\n');
@@ -176,12 +176,12 @@ const updateCookies = e => {
     if (!t) {
         return;
     }
-    let o = t.split(/;\s?/gi).filter((e => false === /^(path|expires|domain|HttpOnly|Secure|SameSite)[=;]*/i.test(e)));
-    for (const e of o) {
+    let s = t.split(/;\s?/gi).filter((e => false === /^(path|expires|domain|HttpOnly|Secure|SameSite)[=;]*/i.test(e)));
+    for (const e of s) {
         const t = e.split(/^(.*?)=\s*(.*)/);
-        const o = t[1];
-        const s = t[2];
-        cookies[o] = s;
+        const s = t[1];
+        const o = t[2];
+        cookies[s] = o;
     }
 };
 
@@ -206,15 +206,15 @@ const getModels = async () => {
         throw Error('Couldn\'t get models list');
     }
     updateCookies(e);
-    const o = {
+    const s = {
         data: t.models.filter((e => e.is_running)).map((e => ({
             id: e.name,
             config: e.config,
             idx: e.id
         })))
     };
-    mdlCache = o;
-    return o;
+    mdlCache = s;
+    return s;
 };
 
 const messageToPrompt = e => {
@@ -225,7 +225,7 @@ const messageToPrompt = e => {
 };
 
 class NBSXStream extends TransformStream {
-    constructor(e = 8, t, o) {
+    constructor(e = 8, t, s) {
         super({
             transform: (e, t) => {
                 this.#e(e, t);
@@ -234,12 +234,12 @@ class NBSXStream extends TransformStream {
                 this.#t(e);
             }
         });
-        this.#o = e;
-        this.#s = t;
-        this.#n = o;
+        this.#s = e;
+        this.#o = t;
+        this.#n = s;
     }
-    #o=void 0;
-    #s=false;
+    #s=void 0;
+    #o=false;
     #r='';
     #i='';
     #n=void 0;
@@ -266,20 +266,19 @@ class NBSXStream extends TransformStream {
     get censored() {
         return true === this.#a;
     }
+    get reply() {
+        return this.#h.join('');
+    }
     empty() {
         this.#h = this.#l = this.#c = [];
         this.#r = this.#i = '';
     }
     #t(e) {
         this.#i.length > 0 && e.enqueue(this.#u(this.#i));
-        prevMessages.push({
-            content: this.#h.join(''),
-            role: 'assistant'
-        });
     }
     #d() {
         const e = [ ...this.#i ];
-        const t = e.splice(0, this.#o).join('');
+        const t = e.splice(0, this.#s).join('');
         this.#i = e.join('');
         return t;
     }
@@ -296,35 +295,35 @@ class NBSXStream extends TransformStream {
     #f() {}
     #e(e, t) {
         this.#m += e.length || 0;
-        const o = Decoder.decode(e);
-        if (!o || o.length < 1) {
+        const s = Decoder.decode(e);
+        if (!s || s.length < 1) {
             return;
         }
-        this.#r += o;
-        let s;
+        this.#r += s;
+        let o;
         let n;
         try {
-            s = JSON.parse(this.#r.replace(/(\n){5}/gm, ''));
-            s.value === AI.censor() && (this.#a = true);
-            this.#c.push(s.value);
+            o = JSON.parse(this.#r.replace(/(\n){5}/gm, ''));
+            o.value === AI.censor() && (this.#a = true);
+            this.#c.push(o.value);
         } catch (e) {
             const t = this.#r.match(/(?<="value":")([\s\S]*?)(?=\\?")/gi);
             if (t?.length > 0) {
-                s = {
+                o = {
                     value: t.join('')
                 };
-                this.#l.push(s.value);
+                this.#l.push(o.value);
             }
         } finally {
-            if (s?.value) {
-                this.#i += s.value;
+            if (o?.value) {
+                this.#i += o.value;
                 this.#r = '';
-                this.#h.push(s.value);
-                n = DangerChars.some((e => this.#i.endsWith(e) || s.value.startsWith(e)));
+                this.#h.push(o.value);
+                n = DangerChars.some((e => this.#i.endsWith(e) || o.value.startsWith(e)));
             }
         }
         n && this.#f();
-        for (;!n && this.#i.length >= this.#o; ) {
+        for (;!n && this.#i.length >= this.#s; ) {
             const e = this.#d();
             t.enqueue(this.#u(e));
         }
@@ -339,11 +338,11 @@ const Proxy = Server((async (e, t) => {
       case '/v1/chat/completions':
         return ((e, t) => {
             setTitle('recv...');
-            let o;
-            const s = new AbortController;
-            const {signal: n} = s;
+            let s;
+            const o = new AbortController;
+            const {signal: n} = o;
             t.socket.on('close', (async () => {
-                s.signal.aborted || s.abort();
+                o.signal.aborted || o.abort();
             }));
             const r = [];
             e.on('data', (e => {
@@ -373,8 +372,9 @@ const Proxy = Server((async (e, t) => {
                     if (!a.stream) {
                         throw Error('Enable streaming');
                     }
-                    (async (e, t, o) => {
-                        const s = await fetch(`${AI.end()}${AI.cfg()}`, {
+                    console.log('' + c.id);
+                    await (async (e, t, s) => {
+                        const o = await fetch(`${AI.end()}${AI.cfg()}`, {
                             headers: {
                                 ...AI.hdr(),
                                 Authorization,
@@ -385,51 +385,62 @@ const Proxy = Server((async (e, t) => {
                             body: JSON.stringify({
                                 model: e.idx,
                                 system: '',
-                                penalty: o,
+                                penalty: s,
                                 temperature: t
                             })
                         });
-                        updateCookies(s);
-                        const n = await s.json();
-                        if (!s?.body || !n?.success) {
+                        updateCookies(o);
+                        const n = await o.json();
+                        if (!o?.body || !n?.success) {
                             throw Error('Couldn\'t set model params');
                         }
                     })(c, a.temperature, a.presence_penalty);
                     let h = l.map(messageToPrompt).join('\n\n');
                     const m = l.findLast((e => 'assistant' === e.role));
                     const u = l.findLast((e => 'user' === e.role));
-                    let d = JSON.stringify(l) === JSON.stringify(prevMessages);
-                    const f = l.find((e => 'assistant' === e.role))?.content !== prevMessages?.find((e => 'assistant' === e.role))?.content;
-                    const p = u?.content !== prevMessages?.findLast((e => 'user' === e.role))?.content;
-                    d && !p || (prevMessages = l);
-                    const g = Settings.RenewAlways || f || !Settings.RenewAlways && d;
-                    console.log('' + c.id);
-                    if (g && Conversation.uuid) {
-                        await deleteChat(Conversation.uuid);
-                        Conversation.uuid = null;
-                        Conversation.depth = 0;
+                    const d = l.find((e => 'assistant' === e.role));
+                    const f = l.find((e => 'user' === e.role));
+                    const p = prevMessages?.findLast((e => 'assistant' === e.role));
+                    const g = prevMessages?.findLast((e => 'user' === e.role));
+                    const C = prevMessages?.find((e => 'assistant' === e.role));
+                    const y = prevMessages?.find((e => 'user' === e.role));
+                    prevMessages && (u.content, g.content);
+                    prevMessages && (m.content, p.content);
+                    const S = prevMessages && d.content !== C.content;
+                    let v = JSON.stringify(l.filter((e => 'system' !== e.role))) === JSON.stringify(prevMessages?.filter((e => 'system' !== e.role)));
+                    const I = prevMessages && !v && !S && f.content !== y?.content;
+                    v || (prevMessages = l);
+                    const A = Settings.RenewAlways || !Conversation.uuid || !Settings.RenewAlways && v || S || I;
+                    if (A) {
+                        console.log('renew');
+                        if (Conversation.uuid) {
+                            await deleteChat(Conversation.uuid);
+                            Conversation.uuid = null;
+                            Conversation.depth = 0;
+                        }
                     }
                     if (Conversation.uuid) {
-                        if (!d) {
+                        if (!v) {
+                            console.log('continue');
                             const e = !Settings.RenewAlways && Settings.SystemExperiments;
                             const t = !e || e && Conversation.depth >= SystemInterval;
-                            const o = [ ...new Set(l.filter((e => '[Start a new chat]' !== e.content)).filter((e => !e.name && 'system' === e.role))) ];
-                            let s;
+                            const s = [ ...new Set(l.filter((e => '[Start a new chat]' !== e.content)).filter((e => !e.name && 'system' === e.role))) ];
+                            let o;
                             if (t) {
                                 console.log('system-full');
-                                s = [ ...o, m, u ];
+                                o = [ ...s, m, u ];
                                 Conversation.depth = 0;
                             }
                             if (!t && e) {
                                 console.log('system-jailbreak');
-                                s = [ m, u, o[o.length - 1] ];
+                                o = [ m, u, s[s.length - 1] ];
                             }
-                            h = s.map(messageToPrompt).join('\n\n');
+                            h = o.map(messageToPrompt).join('\n\n');
                             Conversation.depth++;
                         }
                     } else {
                         Conversation.uuid = randomUUID().toString();
-                        o = await fetch(`${AI.end()}${AI.new(Conversation.uuid)}`, {
+                        s = await fetch(`${AI.end()}${AI.new(Conversation.uuid)}`, {
                             signal: n,
                             method: 'GET',
                             headers: {
@@ -438,13 +449,13 @@ const Proxy = Server((async (e, t) => {
                                 Authorization
                             }
                         });
-                        const e = await o.json();
-                        if (!o?.body || !e?.success) {
+                        const e = await s.json();
+                        if (!s?.body || !e?.success) {
                             throw Error('Couldn\'t initialize reply');
                         }
-                        updateCookies(o);
+                        updateCookies(s);
                     }
-                    o = await fetch(`${AI.end()}${AI.prompt()}`, {
+                    s = await fetch(`${AI.end()}${AI.prompt()}`, {
                         signal: n,
                         headers: {
                             ...AI.hdr(),
@@ -459,19 +470,19 @@ const Proxy = Server((async (e, t) => {
                             browseWeb: false,
                             conversation_id: Conversation.uuid,
                             model_id: c.idx,
-                            query: Settings.PromptExperiment ? g ? Orders.New : Orders.Continue : h
+                            query: Settings.PromptExperiment ? A ? Orders.New : Orders.Continue : h
                         })
                     });
-                    updateCookies(o);
-                    const C = Writable.toWeb(t);
-                    if (200 !== o.status) {
-                        return o.body.pipeTo(C);
+                    updateCookies(s);
+                    const w = Writable.toWeb(t);
+                    if (200 !== s.status) {
+                        return s.body.pipeTo(w);
                     }
-                    e = new NBSXStream(BufferSize, true === a.stream, s);
+                    e = new NBSXStream(BufferSize, true === a.stream, o);
                     i = setInterval((() => setTitle(`recv${true === a.stream ? ' (s)' : ''} ${bytesToSize(e.size)}`)), 300);
-                    await o.body.pipeThrough(e).pipeTo(C);
+                    await s.body.pipeThrough(e).pipeTo(w);
                     e.censored && console.log('[33mfilter detected[0m');
-                    console.log(`${200 == o.status ? '[32m' : '[33m'}${o.status}![0m${g ? ' [r]' : ''}${true === a.stream ? ' (s)' : ''} ${e.broken} broken\n`);
+                    console.log(`${200 == s.status ? '[32m' : '[33m'}${s.status}![0m${A ? ' [r]' : ''}${true === a.stream ? ' (s)' : ''} ${e.broken} broken\n`);
                     e.empty();
                 } catch (e) {
                     if ('AbortError' === e.name) {
@@ -531,6 +542,7 @@ Proxy.on('error', (e => {
 }));
 
 process.on('SIGINT', (async e => {
+    console.log('cleaning...');
     try {
         await deleteChat(Conversation.uuid);
     } catch (e) {}
@@ -538,6 +550,7 @@ process.on('SIGINT', (async e => {
 }));
 
 process.on('exit', (async e => {
+    console.log('cleaning...');
     try {
         await deleteChat(Conversation.uuid);
     } catch (e) {}
