@@ -1,23 +1,21 @@
 @echo off
 pushd %~dp0
 
-echo This will reset your NBSX settings
+echo This will only work if you cloned the repo instead of downloading
+echo and will reset your NBSX settings
 pause
 
 where /q git.exe
 if %ERRORLEVEL% EQU 0 (
   GOTO:pull
-) else (
-  GOTO:nogit
 )
+GOTO:nogit
+
 
 :pull
 call git pull --rebase --autostash
 if %ERRORLEVEL% neq 0 (
   echo Error updating
-)
-else (
-  echo Updated
 )
 GOTO:end
 
