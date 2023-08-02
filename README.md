@@ -16,7 +16,7 @@ coom & doom
 <br>
 <br>
 <hr>
-<a href="https://gitgud.io/ahsk/nbsx/archive/master/nbsx-master.zip">
+<a href="https://gitgud.io/ahsk/nbsx/-/archive/master/nbsx-master.zip">
    <img src="https://gitgud.io/ahsk/nbsx/raw/master/program.png">
 </a>
 <h2><a href="https://gitgud.io/ahsk/nbsx/blob/master/CHANGELOG.md">CHANGELOG</a></h2>
@@ -46,4 +46,4 @@ nodejs>=20.4.*
 
 ## Downloads
 
-> ### [Download latest version](https://gitgud.io/ahsk/nbsx/archive/master/nbsx-master.zip)
+> ### [Download latest version](https://gitgud.io/ahsk/nbsx/-/archive/master/nbsx-master.zip)
