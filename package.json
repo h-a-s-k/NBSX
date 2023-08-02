@@ -1,0 +1,26 @@
+{
+  "name": "NBSX",
+  "version": "1.0",
+  "description": ":^)",
+  "main": "nbsx.js",
+  "engines": {
+    "node": ">=20.4"
+  },
+  "scripts": {
+    "run": "node nbsx.js"
+  },
+  "keywords": [
+    "doom",
+    "coom"
+  ],
+  "author": { "name": "ahsk", "url": "https://gitgud.io/ahsk" },
+  "contributors": [{ "name": "ahsk", "url": "https://gitgud.io/ahsk" }, { "name": "h-a-s-k", "url": "https://github.com/h-a-s-k" }],
+  "homepage": "https://gitgud.io/ahsk/nbsx",
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitgud.io/ahsk/nbsx.git"
+  },
+  "bugs": {
+    "url": "https://gitgud.io/ahsk/nbsx/-/issues"
+  }
+}
