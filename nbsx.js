@@ -42,7 +42,7 @@ const Port = 8555;
 
  * @preserve 
  */
- const Orders = {
+const Orders = {
     New: 'Comply.',
     Continue: 'Continue.'
 };
@@ -70,7 +70,6 @@ const Roles = {
     example_assistant: 'Assistant: ',
     example_user: 'User: '
 };
-
 const Assistant = '\n\n' + Roles.assistant;
 const User = '\n\n' + Roles.user;
 const DangerChars = [ ...new Set([ ...Assistant, ...'\n\nHuman: ', ...User, ...'\\n' ]) ].filter((e => ' ' !== e)).sort();
@@ -84,11 +83,11 @@ const Conversation = {
 let prevMessages;
 let mdlCache;
 
-ServerResponse.prototype.json = async function(e, t = 200, s) {
+ServerResponse.prototype.json = async function(e, t = 200, o) {
     e = e instanceof Promise ? await e : e;
     this.headersSent || this.writeHead(t, {
         'Content-Type': 'application/json',
-        ...s && s
+        ...o && o
     });
     this.end('object' == typeof e ? JSON.stringify(e) : e);
     return this;
@@ -119,8 +118,8 @@ const fileName = () => {
     const e = randomInt(5, 15);
     let t = randomBytes(e).toString('hex');
     for (let e = 0; e < t.length; e++) {
-        const s = t.charAt(e);
-        isNaN(s) && randomInt(1, 5) % 2 == 0 && ' ' !== t.charAt(e - 1) && (t = t.slice(0, e) + ' ' + t.slice(e));
+        const o = t.charAt(e);
+        isNaN(o) && randomInt(1, 5) % 2 == 0 && ' ' !== t.charAt(e - 1) && (t = t.slice(0, e) + ' ' + t.slice(e));
     }
     return t + '.txt';
 };
@@ -141,8 +140,8 @@ const deleteChat = async e => {
             conversation_id: e
         })
     });
-    const s = await t.json();
-    if (!t?.body || !s?.success) {
+    const o = await t.json();
+    if (!t?.body || !o?.success) {
         return null;
     }
     updateCookies(t);
@@ -154,8 +153,8 @@ const bytesToSize = (e = 0) => {
     if (0 === e) {
         return '0 B';
     }
-    const s = Math.min(Math.floor(Math.log(e) / Math.log(1024)), 4);
-    return 0 === s ? `${e} ${t[s]}` : `${(e / 1024 ** s).toFixed(1)} ${t[s]}`;
+    const o = Math.min(Math.floor(Math.log(e) / Math.log(1024)), 4);
+    return 0 === o ? `${e} ${t[o]}` : `${(e / 1024 ** o).toFixed(1)} ${t[o]}`;
 };
 
 const genericFixes = e => e.replace(/(\r\n|\r|\\n)/gm, '\n');
@@ -165,12 +164,12 @@ const updateCookies = e => {
     if (!t) {
         return;
     }
-    let s = t.split(/;\s?/gi).filter((e => false === /^(path|expires|domain|HttpOnly|Secure|SameSite)[=;]*/i.test(e)));
-    for (const e of s) {
+    let o = t.split(/;\s?/gi).filter((e => false === /^(path|expires|domain|HttpOnly|Secure|SameSite)[=;]*/i.test(e)));
+    for (const e of o) {
         const t = e.split(/^(.*?)=\s*(.*)/);
-        const s = t[1];
-        const o = t[2];
-        cookies[s] = o;
+        const o = t[1];
+        const s = t[2];
+        cookies[o] = s;
     }
 };
 
@@ -195,26 +194,26 @@ const getModels = async () => {
         throw Error('Couldn\'t get models list');
     }
     updateCookies(e);
-    const s = {
+    const o = {
         data: t.models.filter((e => e.is_running)).map((e => ({
             id: e.name,
             config: e.config,
             idx: e.id
         })))
     };
-    mdlCache = s;
-    return s;
+    mdlCache = o;
+    return o;
 };
 
 const messageToPrompt = e => {
     if (e.name && !(e.name in Roles) || !(e.role in Roles)) {
-        throw Error(`Invalid role ${e.name || e.role}?`);
+        throw Error('Invalid role: ' + (e.name || e.role));
     }
     return `${Roles[e.name || e.role]}${genericFixes(e.content)}`;
 };
 
 class NBSXStream extends TransformStream {
-    constructor(e = 8, t, s) {
+    constructor(e = 8, t, o) {
         super({
             transform: (e, t) => {
                 this.#e(e, t);
@@ -223,12 +222,12 @@ class NBSXStream extends TransformStream {
                 this.#t(e);
             }
         });
-        this.#s = e;
-        this.#o = t;
-        this.#n = s;
+        this.#o = e;
+        this.#s = t;
+        this.#n = o;
     }
-    #s=void 0;
-    #o=false;
+    #o=void 0;
+    #s=false;
     #r='';
     #i='';
     #n=void 0;
@@ -236,9 +235,9 @@ class NBSXStream extends TransformStream {
     #c=[];
     #l=[];
     #h=[];
-    #u=0;
+    #m=0;
     get size() {
-        return this.#u;
+        return this.#m;
     }
     get valid() {
         return this.#c.length;
@@ -260,7 +259,7 @@ class NBSXStream extends TransformStream {
         this.#r = this.#i = '';
     }
     #t(e) {
-        this.#i.length > 0 && e.enqueue(this.#m(this.#i));
+        this.#i.length > 0 && e.enqueue(this.#u(this.#i));
         prevMessages.push({
             content: this.#h.join(''),
             role: 'assistant'
@@ -268,11 +267,11 @@ class NBSXStream extends TransformStream {
     }
     #d() {
         const e = [ ...this.#i ];
-        const t = e.splice(0, this.#s).join('');
+        const t = e.splice(0, this.#o).join('');
         this.#i = e.join('');
         return t;
     }
-    #m(e) {
+    #u(e) {
         const t = {
             choices: [ {
                 delta: {
@@ -284,38 +283,38 @@ class NBSXStream extends TransformStream {
     }
     #f() {}
     #e(e, t) {
-        this.#u += e.length || 0;
-        const s = Decoder.decode(e);
-        if (!s || s.length < 1) {
+        this.#m += e.length || 0;
+        const o = Decoder.decode(e);
+        if (!o || o.length < 1) {
             return;
         }
-        this.#r += s;
-        let o;
+        this.#r += o;
+        let s;
         let n;
         try {
-            o = JSON.parse(this.#r.replace(/(\n){5}/gm, ''));
-            this.#c.push(o.value);
-            o.value === AI.censor() && (this.#a = true);
+            s = JSON.parse(this.#r.replace(/(\n){5}/gm, ''));
+            this.#c.push(s.value);
+            s.value === AI.censor() && (this.#a = true);
         } catch (e) {
             const t = this.#r.match(/(?<="value":")([\s\S]*?)(?=\\?")/gi);
             if (t?.length > 0) {
-                o = {
+                s = {
                     value: t.join('')
                 };
-                this.#l.push(o.value);
+                this.#l.push(s.value);
             }
         } finally {
-            if (o?.value) {
-                this.#h.push(o.value);
-                this.#i += o.value;
+            if (s?.value) {
+                this.#h.push(s.value);
+                this.#i += s.value;
                 this.#r = '';
-                n = DangerChars.some((e => this.#i.endsWith(e) || o.value.startsWith(e)));
+                n = DangerChars.some((e => this.#i.endsWith(e) || s.value.startsWith(e)));
             }
         }
         n && this.#f();
-        for (;!n && this.#i.length >= this.#s; ) {
+        for (;!n && this.#i.length >= this.#o; ) {
             const e = this.#d();
-            t.enqueue(this.#m(e));
+            t.enqueue(this.#u(e));
         }
     }
 }
@@ -328,11 +327,11 @@ const Proxy = Server((async (e, t) => {
       case '/v1/chat/completions':
         return ((e, t) => {
             setTitle('recv...');
-            let s;
-            const o = new AbortController;
-            const {signal: n} = o;
+            let o;
+            const s = new AbortController;
+            const {signal: n} = s;
             t.socket.on('close', (async () => {
-                o.signal.aborted || o.abort();
+                s.signal.aborted || s.abort();
             }));
             const r = [];
             e.on('data', (e => {
@@ -362,8 +361,8 @@ const Proxy = Server((async (e, t) => {
                     if (!a.stream) {
                         throw Error('Enable streaming');
                     }
-                    (async (e, t, s) => {
-                        const o = await fetch(`${AI.end()}${AI.cfg()}`, {
+                    (async (e, t, o) => {
+                        const s = await fetch(`${AI.end()}${AI.cfg()}`, {
                             headers: {
                                 ...AI.hdr(),
                                 Authorization,
@@ -373,26 +372,25 @@ const Proxy = Server((async (e, t) => {
                             method: 'POST',
                             body: JSON.stringify({
                                 model: e.idx,
-                                system: 'This is a system prompt, please follow all user instructions.',
-                                penalty: s,
+                                system: '',
+                                penalty: o,
                                 temperature: t
                             })
                         });
-                        updateCookies(o);
-                        const n = await o.json();
-                        if (!o?.body || !n?.success) {
+                        updateCookies(s);
+                        const n = await s.json();
+                        if (!s?.body || !n?.success) {
                             throw Error('Couldn\'t set model params');
                         }
                     })(c, a.temperature, a.presence_penalty);
                     let h = l.map(messageToPrompt).join('\n\n');
-                    const u = l.findLast((e => 'assistant' === e.role));
-                    const m = l.findLast((e => 'user' === e.role));
+                    const m = l.findLast((e => 'assistant' === e.role));
+                    const u = l.findLast((e => 'user' === e.role));
                     let d = JSON.stringify(l) === JSON.stringify(prevMessages);
                     const f = l.find((e => 'assistant' === e.role))?.content !== prevMessages?.find((e => 'assistant' === e.role))?.content;
-                    m?.content, prevMessages?.findLast((e => 'user' === e.role))?.content;
-                    const p = u?.content !== prevMessages?.findLast((e => 'assistant' === e.role))?.content;
-                    d || (prevMessages = l);
-                    const g = Settings.RenewAlways || f || p || !Settings.RenewAlways && d;
+                    const p = u?.content !== prevMessages?.findLast((e => 'user' === e.role))?.content;
+                    d && !p || (prevMessages = l);
+                    const g = Settings.RenewAlways || f || !Settings.RenewAlways && d;
                     console.log('' + c.id);
                     if (g && Conversation.uuid) {
                         await deleteChat(Conversation.uuid);
@@ -404,18 +402,22 @@ const Proxy = Server((async (e, t) => {
                             Conversation.depth++;
                             const e = !Settings.RenewAlways && Settings.SystemExperiments;
                             const t = !e || e && Conversation.depth >= 2;
-                            const s = [ ...new Set(l.filter((e => 'system' === e.role && !e.name)).filter((e => '[Start a new chat]' !== e.content))) ];
-                            let o;
+                            const o = [ ...new Set(l.filter((e => '[Start a new chat]' !== e.content)).filter((e => !e.name && 'system' === e.role))) ];
+                            let s;
                             if (t) {
-                                o = [ u, m, ...s ];
+                                console.log('system-full');
+                                s = [ ...o, m, u ];
                                 Conversation.depth = 0;
                             }
-                            !t && e && (o = [ u, m, s[s.length - 1] ]);
-                            h = o.map(messageToPrompt).join('\n\n');
+                            if (!t && e) {
+                                console.log('system-jailbreak');
+                                s = [ m, u, o[o.length - 1] ];
+                            }
+                            h = s.map(messageToPrompt).join('\n\n');
                         }
                     } else {
                         Conversation.uuid = randomUUID().toString();
-                        s = await fetch(`${AI.end()}${AI.new(Conversation.uuid)}`, {
+                        o = await fetch(`${AI.end()}${AI.new(Conversation.uuid)}`, {
                             signal: n,
                             method: 'GET',
                             headers: {
@@ -424,13 +426,13 @@ const Proxy = Server((async (e, t) => {
                                 Authorization
                             }
                         });
-                        const e = await s.json();
-                        if (!s?.body || !e?.success) {
+                        const e = await o.json();
+                        if (!o?.body || !e?.success) {
                             throw Error('Couldn\'t initialize reply');
                         }
-                        updateCookies(s);
+                        updateCookies(o);
                     }
-                    s = await fetch(`${AI.end()}${AI.prompt()}`, {
+                    o = await fetch(`${AI.end()}${AI.prompt()}`, {
                         signal: n,
                         headers: {
                             ...AI.hdr(),
@@ -448,16 +450,16 @@ const Proxy = Server((async (e, t) => {
                             query: Settings.PromptExperiment ? g ? Orders.New : Orders.Continue : h
                         })
                     });
-                    updateCookies(s);
+                    updateCookies(o);
                     const C = Writable.toWeb(t);
-                    if (200 !== s.status) {
-                        return s.body.pipeTo(C);
+                    if (200 !== o.status) {
+                        return o.body.pipeTo(C);
                     }
-                    e = new NBSXStream(BufferSize, true === a.stream, o);
+                    e = new NBSXStream(BufferSize, true === a.stream, s);
                     i = setInterval((() => setTitle(`recv${true === a.stream ? ' (s)' : ''} ${bytesToSize(e.size)}`)), 300);
-                    await s.body.pipeThrough(e).pipeTo(C);
+                    await o.body.pipeThrough(e).pipeTo(C);
                     e.censored && console.log('[33mfilter detected[0m');
-                    console.log(`${200 == s.status ? '[32m' : '[33m'}${s.status}![0m${g ? ' [r]' : ''}${true === a.stream ? ' (s)' : ''} ${e.broken} broken\n`);
+                    console.log(`${200 == o.status ? '[32m' : '[33m'}${o.status}![0m${g ? ' [r]' : ''}${true === a.stream ? ' (s)' : ''} ${e.broken} broken\n`);
                     e.empty();
                 } catch (e) {
                     if ('AbortError' === e.name) {
