@@ -9,19 +9,21 @@ const Authorization = '';
 
 ### SettingName: (DEFAULT)/opt1/opt2
 
- 1. PromptExperiment: (true)/false
+ 1. `PromptExperiment`: (true)/false
     * true is an alternative way to send your prompt to the AI
     * experiment before setting to false
 
- 2. RenewAlways: (false)/true
+ 2. `RenewAlways`: (false)/true
     * true creates a new conversation, sending all messages each time
-    * false sends only latest assistant->user->system messages
+    * false sends only latest assistant->user messages
     * experiment before setting to true
 
- 3. SystemExperiments: (true)/false
+ 3. `SystemExperiments`: (true)/false
     * only has effect when RenewAlways is set to false
-    * true sends system-prompts every 2 messages (can be censored due to no jailbreak in every message)
-    * false sends system-prompts with every message
+    * no effect on very first message
+    * true sends the last system prompt (typically your jailbreak) followed by assistant->user messages
+       * on hitting `SystemInterval` messages, sends all system prompts followed by assistant->user messages
+    * false sends all system prompts with every message
 
  * @preserve 
  */
@@ -35,7 +37,7 @@ const Ip = '127.0.0.1';
 const Port = 8555;
 
 /**
- * Only has effect when PromptExperiment is set to true
+ * Only has effect when PromptExperiment is true
  * Sent together with the file
  * New: what to send when starting a new conversation
  * Continue: what to send on each following reply
@@ -55,6 +57,15 @@ const Orders = {
  */
 const BufferSize = 8;
 
+/**
+ * Only has effect when SystemExperiments is true
+ * Interval between each time all system prompts are included
+ * @default 3
+
+ * @preserve 
+ */
+const SystemInterval = 3;
+
 const {createServer: Server, ServerResponse} = require('node:http');
 const {createHash: Hash, randomUUID, randomInt, randomBytes} = require('node:crypto');
 const {TransformStream} = require('node:stream/web');
@@ -70,6 +81,7 @@ const Roles = {
     example_assistant: 'Assistant: ',
     example_user: 'User: '
 };
+
 const Assistant = '\n\n' + Roles.assistant;
 const User = '\n\n' + Roles.user;
 const DangerChars = [ ...new Set([ ...Assistant, ...'\n\nHuman: ', ...User, ...'\\n' ]) ].filter((e => ' ' !== e)).sort();
@@ -249,7 +261,7 @@ class NBSXStream extends TransformStream {
         return this.#h.length;
     }
     get broken() {
-        return (this.invalid / this.total * 100).toFixed(2) + '%';
+        return Math.min(this.invalid / this.total * 100, 100).toFixed(2) + '%';
     }
     get censored() {
         return true === this.#a;
@@ -293,8 +305,8 @@ class NBSXStream extends TransformStream {
         let n;
         try {
             s = JSON.parse(this.#r.replace(/(\n){5}/gm, ''));
-            this.#c.push(s.value);
             s.value === AI.censor() && (this.#a = true);
+            this.#c.push(s.value);
         } catch (e) {
             const t = this.#r.match(/(?<="value":")([\s\S]*?)(?=\\?")/gi);
             if (t?.length > 0) {
@@ -305,9 +317,9 @@ class NBSXStream extends TransformStream {
             }
         } finally {
             if (s?.value) {
-                this.#h.push(s.value);
                 this.#i += s.value;
                 this.#r = '';
+                this.#h.push(s.value);
                 n = DangerChars.some((e => this.#i.endsWith(e) || s.value.startsWith(e)));
             }
         }
@@ -399,9 +411,8 @@ const Proxy = Server((async (e, t) => {
                     }
                     if (Conversation.uuid) {
                         if (!d) {
-                            Conversation.depth++;
                             const e = !Settings.RenewAlways && Settings.SystemExperiments;
-                            const t = !e || e && Conversation.depth >= 2;
+                            const t = !e || e && Conversation.depth >= SystemInterval;
                             const o = [ ...new Set(l.filter((e => '[Start a new chat]' !== e.content)).filter((e => !e.name && 'system' === e.role))) ];
                             let s;
                             if (t) {
@@ -414,6 +425,7 @@ const Proxy = Server((async (e, t) => {
                                 s = [ m, u, o[o.length - 1] ];
                             }
                             h = s.map(messageToPrompt).join('\n\n');
+                            Conversation.depth++;
                         }
                     } else {
                         Conversation.uuid = randomUUID().toString();
