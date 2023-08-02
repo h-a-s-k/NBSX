@@ -5,9 +5,9 @@ echo This will reset your NBSX settings
 pause
 
 where /q git.exe
-if %ERRORLEVEL% EQU 0 ( 
+if %ERRORLEVEL% EQU 0 (
   GOTO:pull
-) else ( 
+) else (
   GOTO:nogit
 )
 
@@ -16,9 +16,9 @@ call git pull --rebase --autostash
 if %ERRORLEVEL% neq 0 (
   echo Error updating
 )
-else {
+else (
   echo Updated
-}
+)
 GOTO:end
 
 :nogit
