@@ -41,6 +41,7 @@ const Port = 8555;
  * Sent together with the file
  * New: what to send when starting a new conversation
  * Continue: what to send on each following reply
+ * Keep in mind your main/nsfw/jailbreak prompts are IN the file already
 
  * @preserve 
  */
@@ -249,7 +250,7 @@ class NBSXStream extends TransformStream {
     #h=[];
     #m=0;
     get size() {
-        return this.#m;
+        return this.#m || 0;
     }
     get valid() {
         return this.#c.length;
@@ -369,9 +370,6 @@ const Proxy = Server((async (e, t) => {
                     if (!c || isNaN(c.idx)) {
                         throw Error('Enable \'Show External models\' and pick one');
                     }
-                    if (!a.stream) {
-                        throw Error('Enable streaming');
-                    }
                     console.log('' + c.id);
                     await (async (e, t, s) => {
                         const o = await fetch(`${AI.end()}${AI.cfg()}`, {
@@ -479,7 +477,7 @@ const Proxy = Server((async (e, t) => {
                         return s.body.pipeTo(w);
                     }
                     e = new NBSXStream(BufferSize, true === a.stream, o);
-                    i = setInterval((() => setTitle(`recv${true === a.stream ? ' (s)' : ''} ${bytesToSize(e.size)}`)), 300);
+                    i = setInterval((() => setTitle(`recv${true === a.stream ? ' (s)' : ''} ${bytesToSize(e?.size || 0)}`)), 300);
                     await s.body.pipeThrough(e).pipeTo(w);
                     e.censored && console.log('[33mfilter detected[0m');
                     console.log(`${200 == s.status ? '[32m' : '[33m'}${s.status}![0m${A ? ' [r]' : ''}${true === a.stream ? ' (s)' : ''} ${e.broken} broken\n`);
@@ -500,7 +498,7 @@ const Proxy = Server((async (e, t) => {
                 } finally {
                     clearInterval(i);
                     i = null;
-                    setTitle('ok ' + bytesToSize(e.size));
+                    setTitle('ok ' + bytesToSize(e?.size || 0));
                 }
             }));
         })(e, t);
@@ -534,7 +532,7 @@ Proxy.listen(Port, Ip, (async () => {
     await getModels();
     console.log(`[2mNBSX v1.0[0m\n[33mhttp://${Ip}:${Port}/v1[0m\n\n${Object.keys(Settings).map((e => `[1m${e}:[0m [36m${Settings[e]}[0m`)).sort().join('\n')}\n`);
     await Promise.all(t.conversations.map((e => deleteChat(e.conversation_id))));
-    console.log('Logged in %o', mdlCache.data.map((e => e.id)).sort());
+    console.log('Logged in %o\nmake sure streaming is enabled', mdlCache.data.map((e => e.id)).sort());
 }));
 
 Proxy.on('error', (e => {
