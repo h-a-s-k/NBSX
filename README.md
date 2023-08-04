@@ -31,16 +31,19 @@ nodejs>=20.4.*
 
 ### SettingName: (DEFAULT)/opt1/opt2
 
- 1. `PromptExperiment`: (true)/false
+ 1. `PassParams`: (true)/false
+    * sends your configured temperature and frequence penalty
+
+ 2. `PromptExperiment`: (true)/false
     * true is an alternative way to send your prompt to the AI
     * experiment before setting to false
 
- 2. `RenewAlways`: (false)/true
+ 3. `RenewAlways`: (false)/true
     * true creates a new conversation, sending all messages each time
     * false sends only latest assistant->user messages
     * experiment before setting to true
 
- 3. `SystemExperiments`: (true)/false
+ 4. `SystemExperiments`: (true)/false
     * only has effect when RenewAlways is set to false
     * no effect on very first message
     * true sends the last system prompt (typically your jailbreak) followed by assistant->user messages

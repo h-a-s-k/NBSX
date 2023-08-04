@@ -14,6 +14,21 @@
 
 ---
 
+### 1.1
+> Changed reply parsing method
+
+should be less broken now
+
+> **PassParams** added (defaults false)
+
+sends your configured temperature and frequence penalty
+
+> Changed **New**/**Continue** orders
+
+suggestions?
+
+---
+
 ### 1.0
 > Initial release
 
