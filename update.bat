@@ -5,11 +5,15 @@ echo This will only work if you cloned the repo instead of downloading
 echo and will reset your NBSX settings
 pause
 
+if not exist .git\ (
+  GOTO:notgit
+)
+
 where /q git.exe
 if %ERRORLEVEL% EQU 0 (
   GOTO:pull
 )
-GOTO:nogit
+GOTO:missgit
 
 
 :pull
@@ -19,8 +23,13 @@ if %ERRORLEVEL% neq 0 (
 )
 GOTO:end
 
-:nogit
+:missgit
 echo Install git to update
+GOTO:end
+
+:notgit
+echo Only able to update if you git clone the repository
+GOTO:end
 
 
 :end
