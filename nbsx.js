@@ -89,11 +89,11 @@ const Roles = {
     example_assistant: 'Assistant: ',
     example_user: 'User: '
 };
-
 const Assistant = '\n\n' + Roles.assistant;
 const User = '\n\n' + Roles.user;
 const DangerChars = [ ...new Set([ ...Assistant, ...'\n\nHuman: ', ...User, ...'\\n' ]) ].filter((e => ' ' !== e)).sort();
 
+const Main = 'NBSX v1.2';
 const cookies = {};
 const Conversation = {
     uuid: null,
@@ -102,6 +102,7 @@ const Conversation = {
 
 let prevMessages;
 let mdlCache;
+let mdlCacheNext = Date.now();
 
 ServerResponse.prototype.json = async function(e, t = 200, s) {
     e = e instanceof Promise ? await e : e;
@@ -196,11 +197,14 @@ const updateCookies = e => {
 const getCookies = () => Object.keys(cookies).map((e => `${e}=${cookies[e]};`)).join(' ').replace(/(\s+)$/gi, '');
 
 const setTitle = e => {
-    e = 'NBSX v1.1 - ' + e;
+    e = `${Main} - ${e}`;
     process.title !== e && (process.title = e);
 };
 
 const getModels = async () => {
+    if (Date.now() < mdlCacheNext) {
+        return;
+    }
     const e = await fetch(`${AI.end()}${AI.mdl()}`, {
         method: 'GET',
         headers: {
@@ -222,6 +226,7 @@ const getModels = async () => {
         })))
     };
     mdlCache = s;
+    mdlCacheNext = Date.now() + 12e4;
     return s;
 };
 
@@ -233,7 +238,7 @@ const messageToPrompt = e => {
 };
 
 class NBSXStream extends TransformStream {
-    constructor(e = 8, t, s) {
+    constructor(e = 8, t, s, o) {
         super({
             transform: (e, t) => {
                 this.#e(e, t);
@@ -245,52 +250,54 @@ class NBSXStream extends TransformStream {
         this.#s = e;
         this.#o = t;
         this.#n = s;
+        this.#r = o;
     }
     #s=void 0;
     #o=false;
-    #r='';
     #i='';
+    #a='';
+    #r=void 0;
     #n=void 0;
-    #a=false;
-    #c=[];
+    #c=false;
     #l=[];
     #h=[];
-    #m=0;
+    #m=[];
+    #u=0;
     get size() {
-        return this.#m;
+        return this.#u;
     }
     get valid() {
-        return this.#c.length;
-    }
-    get invalid() {
         return this.#l.length;
     }
-    get total() {
+    get invalid() {
         return this.#h.length;
+    }
+    get total() {
+        return this.#m.length;
     }
     get broken() {
         return Math.min(this.invalid / this.total * 100, 100).toFixed(2) + '%';
     }
     get censored() {
-        return true === this.#a;
+        return true === this.#c;
     }
     get reply() {
-        return this.#h.join('');
+        return this.#m.join('');
     }
     empty() {
-        this.#h = this.#l = this.#c = [];
-        this.#r = this.#i = '';
+        this.#m = this.#h = this.#l = [];
+        this.#i = this.#a = '';
     }
     #t(e) {
-        this.#i.length > 0 && e.enqueue(this.#u(this.#i));
+        this.#a.length > 0 && e.enqueue(this.#d(this.#a));
     }
-    #d() {
-        const e = [ ...this.#i ];
+    #f() {
+        const e = [ ...this.#a ];
         const t = e.splice(0, this.#s).join('');
-        this.#i = e.join('');
+        this.#a = e.join('');
         return t;
     }
-    #u(e) {
+    #d(e) {
         const t = {
             choices: [ {
                 delta: {
@@ -305,35 +312,35 @@ class NBSXStream extends TransformStream {
         if (!e || e.length < 1) {
             return;
         }
-        this.#m += e.byteLength || 0;
+        this.#u += e.byteLength || 0;
         e = Decoder.decode(e);
-        this.#r += e;
-        const s = this.#r.split(/(\n){5}/gm).filter((e => e.length > 0 && '\n' !== e));
+        this.#i += e;
+        const s = this.#i.split(/(\n){5}/gm).filter((e => e.length > 0 && '\n' !== e));
         for (const e of s) {
-            this.#f(e, t);
+            this.#g(e, t);
         }
     }
-    #f(e, t) {
+    #g(e, t) {
         let s;
         let o;
         try {
             s = JSON.parse(e);
-            s.value === AI.censor() && (this.#a = true);
+            s.value === AI.censor() && (this.#c = true);
             if (s.error) {
-                console.log('api error: "%o"', s.error);
-                s.value = '' + s.error;
+                console.log(`[31m${this.#r.id}: ${s.error}[0m`);
+                s.value = `## ${Main}\n**${this.#r.id}**: ${s.error}`;
             }
-            this.#c.push(s.value);
-            if (s?.value) {
-                this.#i += s.value;
-                this.#r = '';
-                this.#h.push(s.value);
-                o = DangerChars.some((e => this.#i.endsWith(e) || s.value.startsWith(e)));
+            this.#l.push(s.value);
+            if (s.value) {
+                this.#a += s.value;
+                this.#i = '';
+                this.#m.push(s.value);
+                o = DangerChars.some((e => this.#a.endsWith(e) || s.value.startsWith(e)));
             }
             o && this.#p();
-            for (;!o && this.#i.length >= this.#s; ) {
-                const e = this.#d();
-                t.enqueue(this.#u(e));
+            for (;!o && this.#a.length >= this.#s; ) {
+                const e = this.#f();
+                t.enqueue(this.#d(e));
             }
         } catch (e) {}
     }
@@ -413,19 +420,19 @@ const Proxy = Server((async (e, t) => {
                     const m = l.findLast((e => 'assistant' === e.role));
                     const u = l.findLast((e => 'user' === e.role));
                     const d = l.find((e => 'assistant' === e.role));
-                    const p = l.find((e => 'user' === e.role));
-                    const f = prevMessages?.findLast((e => 'assistant' === e.role));
+                    const f = l.find((e => 'user' === e.role));
+                    const p = prevMessages?.findLast((e => 'assistant' === e.role));
                     const g = prevMessages?.findLast((e => 'user' === e.role));
-                    const S = prevMessages?.find((e => 'assistant' === e.role));
+                    const C = prevMessages?.find((e => 'assistant' === e.role));
                     const y = prevMessages?.find((e => 'user' === e.role));
                     prevMessages && (u.content, g.content);
-                    prevMessages && (m.content, f.content);
-                    const C = prevMessages && d.content !== S.content;
+                    prevMessages && (m.content, p.content);
+                    const S = prevMessages && d.content !== C.content;
                     let v = JSON.stringify(l.filter((e => 'system' !== e.role))) === JSON.stringify(prevMessages?.filter((e => 'system' !== e.role)));
-                    const I = prevMessages && !v && !C && p.content !== y?.content;
+                    const I = prevMessages && !v && !S && f.content !== y?.content;
                     v || (prevMessages = l);
                     l.find((e => e.content.indexOf('Pause your roleplay. Determine if this task is completed') > -1));
-                    const A = Settings.RenewAlways || !Conversation.uuid || !Settings.RenewAlways && v || C || I;
+                    const A = Settings.RenewAlways || !Conversation.uuid || !Settings.RenewAlways && v || S || I;
                     if (A && Conversation.uuid) {
                         await deleteChat(Conversation.uuid);
                         Conversation.uuid = null;
@@ -489,7 +496,7 @@ const Proxy = Server((async (e, t) => {
                     if (200 !== s.status) {
                         return s.body.pipeTo(w);
                     }
-                    e = new NBSXStream(BufferSize, true === a.stream, o);
+                    e = new NBSXStream(BufferSize, true === a.stream, o, c);
                     i = setInterval((() => setTitle(`recv${true === a.stream ? ' (s)' : ''} ${bytesToSize(e.size)}`)), 300);
                     await s.body.pipeThrough(e).pipeTo(w);
                     e.censored && console.log('[33mfilter detected[0m');
@@ -543,7 +550,7 @@ Proxy.listen(Port, Ip, (async () => {
     updateCookies(e);
     setTitle('ok');
     await getModels();
-    console.log(`[2mNBSX v1.1[0m\n[33mhttp://${Ip}:${Port}/v1[0m\n\n${Object.keys(Settings).map((e => `[1m${e}:[0m [36m${Settings[e]}[0m`)).sort().join('\n')}\n`);
+    console.log(`[2m${Main}[0m\n[33mhttp://${Ip}:${Port}/v1[0m\n\n${Object.keys(Settings).map((e => `[1m${e}:[0m [36m${Settings[e]}[0m`)).sort().join('\n')}\n`);
     await Promise.all(t.conversations.map((e => deleteChat(e.conversation_id))));
     console.log('Logged in %o\nmake sure streaming is enabled', mdlCache.data.map((e => e.id)).sort());
 }));

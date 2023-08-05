@@ -1,6 +1,6 @@
 {
-  "name": "NBSX",
-  "version": "1.0",
+  "name": "nbsx",
+  "version": "1.2",
   "description": ":^)",
   "main": "nbsx.js",
   "engines": {
