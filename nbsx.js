@@ -203,7 +203,7 @@ const setTitle = e => {
 
 const getModels = async () => {
     if (Date.now() < mdlCacheNext) {
-        return;
+        return mdlCache;
     }
     const e = await fetch(`${AI.end()}${AI.mdl()}`, {
         method: 'GET',
